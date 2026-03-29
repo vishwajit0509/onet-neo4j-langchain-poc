@@ -6,7 +6,7 @@ import sys
 # Adds the root directory (POC-LFDT) to the python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from neo4j import GraphDatabase
-from langchain_community.graphs import Neo4jGraph
+from langchain_neo4j import Neo4jGraph
 from langchain_community.vectorstores import Neo4jVector
 from src.utils.llms import embeddings # Import from your utils
 from dotenv import load_dotenv
@@ -42,6 +42,5 @@ vector_store = Neo4jVector.from_existing_index(
     password=PWD,
     index_name="occupation_embeddings",
     text_node_property="description",
-    # ADD THIS LINE TO SKIP THE "FOO" TEST:
-    embedding_dimension=768 
+    
 )

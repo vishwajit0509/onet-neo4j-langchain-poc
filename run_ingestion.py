@@ -16,9 +16,9 @@ def main():
     try:
         # --- PHASE 1: Raw Data Ingestion (CSV/TXT to Graph) ---
         # This creates the Nodes and Relationships (Occupations, Skills, Tasks)
-        ingest_occupations(ONET_DIR / "Occupation Data.txt")
-        ingest_skills(ONET_DIR / "Skills.txt")
-        ingest_tasks(ONET_DIR / "Task Statements.txt")
+        ##ingest_occupations(ONET_DIR / "Occupation Data.txt")
+        ##ingest_skills(ONET_DIR / "Skills.txt")
+        ##ingest_tasks(ONET_DIR / "Task Statements.txt")
         
         print("\n--- PHASE 1 COMPLETE ---")
         
