@@ -2,6 +2,7 @@
 import pandas as pd
 import sys
 import os
+import time
 
 # Adds the root directory (POC-LFDT) to the python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
@@ -14,6 +15,7 @@ from src.utils.helpers import PROMPTS
 from src.agents.state import TalentAngelState
 
 def gatekeeper_node(state: TalentAngelState):
+    time.sleep(3)
     print("🛡️ Gatekeeper: Securing input...")
     query = state['user_query']
     prompt = PROMPTS['gatekeeper']['system'].format(query=query)
@@ -40,6 +42,7 @@ def connector_node(state: TalentAngelState):
     return {"connector_data": data, "next_action": "pathfinder" if needs_path else "market_researcher"}
 
 def pathfinder_node(state: TalentAngelState):
+    time.sleep(3)
     print("🛤️ Pathfinder: Calculating skill gap...")
     extract_prompt = PROMPTS['pathfinder']['extract'].format(query=state['user_query'])
     target_raw = llm.invoke(extract_prompt).content.strip()
@@ -69,6 +72,7 @@ def market_researcher_node(state: TalentAngelState):
     return {"market_data": insights, "next_action": "consultor"}
 
 def consultor_node(state: TalentAngelState):
+    time.sleep(3)
     print("👼 Consultor: Finalizing roadmap...")
     context = f"Job: {state['locator_data']['title']}\n"
     if state.get('pathfinder_data'): context += f"Gap: {state['pathfinder_data']}\n"
