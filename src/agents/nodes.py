@@ -44,46 +44,107 @@ def connector_node(state: TalentAngelState):
 def pathfinder_node(state: TalentAngelState):
     time.sleep(3)
     print("🛤️ Pathfinder: Calculating skill gap...")
-    extract_prompt = PROMPTS['pathfinder']['extract'].format(query=state['user_query'])
+
+    extract_prompt = PROMPTS['pathfinder']['extract'].format(
+        query=state['user_query']
+    )
     target_raw = llm.invoke(extract_prompt).content.strip()
+
     target_job = vector_search(target_raw)
-    
+
     if not target_job:
-        return {"pathfinder_data": "Target career not found.", "next_action": "market_researcher"}
-    
-    # Mathematical Gap Analysis: $Growth = Target - Current$
+        return {
+            "pathfinder_data": {
+                "target_role": "Not Found",
+                "gaps": []
+            },
+            "next_action": "market_researcher"
+        }
+
     gap_query = """
     MATCH (target:Occupation {code: $target_code})-[r_target:REQUIRES]->(s:Skill)
     OPTIONAL MATCH (current:Occupation {code: $current_code})-[r_current:REQUIRES]->(s)
     WITH s, r_target.level AS t_lvl, COALESCE(r_current.level, 0) AS c_lvl
     WHERE t_lvl > c_lvl
-    RETURN s.name AS skill, (t_lvl - c_lvl) AS gap ORDER BY gap DESC LIMIT 5
+    RETURN s.name AS skill, (t_lvl - c_lvl) AS gap
+    ORDER BY gap DESC LIMIT 5
     """
-    gap_data = graph_db.query(gap_query, {"current_code": state['locator_data']['code'], "target_code": target_job['code']})
-    
-    roadmap = f"Target: {target_job['title']}\nGaps: " + ", ".join([f"{g['skill']} (+{round(g['gap'], 1)})" for g in gap_data])
-    return {"pathfinder_data": roadmap, "next_action": "market_researcher"}
+
+    gap_data = graph_db.query(
+        gap_query,
+        {
+            "current_code": state['locator_data']['code'],
+            "target_code": target_job['code']
+        }
+    )
+
+    return {
+        "pathfinder_data": {
+            "target_role": target_job['title'],
+            "gaps": gap_data
+        },
+        "next_action": "market_researcher"
+    }
 
 def market_researcher_node(state: TalentAngelState):
     print("📈 Researcher: Getting market trends...")
+
     job = state['locator_data']['title']
-    prompt = PROMPTS['market_researcher']['research'].format(job_title=job)
+    connector_data = state.get('connector_data', {})
+
+    skills = ", ".join([s['name'] for s in connector_data.get('skills', [])[:5]])
+
+    prompt = PROMPTS['market_researcher']['research'].format(
+        job_title=job,
+        skills=skills
+    )
+
     insights = llm.invoke(prompt).content.strip()
+
     return {"market_data": insights, "next_action": "consultor"}
 
 def consultor_node(state: TalentAngelState):
     time.sleep(3)
     print("👼 Consultor: Finalizing roadmap...")
-    context = f"Job: {state['locator_data']['title']}\n"
-    if state.get('pathfinder_data'): context += f"Gap: {state['pathfinder_data']}\n"
-    if state.get('market_data'): context += f"Market: {state['market_data']}\n"
-    
+
+    # ✅ Current role
+    current_role = state['locator_data']['title']
+
+    # ✅ Pathfinder structured data
+    pathfinder = state.get('pathfinder_data', {})
+    target_role = pathfinder.get("target_role", "Not specified")
+    gaps = pathfinder.get("gaps", [])
+
+    # Format gaps nicely
+    gap_text = ", ".join(
+        [f"{g['skill']} (+{round(g['gap'], 1)})" for g in gaps]
+    ) if gaps else "No major gaps identified"
+
+    # ✅ Build strong structured context
+    context = f"""
+    Current Role: {current_role}
+    Target Role: {target_role}
+    Skill Gaps: {gap_text}
+    User Query: {state['user_query']}
+    """
+
+    if state.get('market_data'):
+        context += f"\nMarket Insights: {state['market_data']}"
+
+    # ✅ Generate prompt
     prompt = PROMPTS['consultor']['roadmap'].format(context=context)
+
     if state.get('critic_feedback'):
-        prompt += PROMPTS['consultor']['feedback_loop'].format(feedback=state['critic_feedback'])
-        
+        prompt += PROMPTS['consultor']['feedback_loop'].format(
+            feedback=state['critic_feedback']
+        )
+
     response = llm.invoke(prompt)
-    return {"final_response": response.content, "next_action": "critic"}
+
+    return {
+        "final_response": response.content,
+        "next_action": "critic"
+    }
 
 def critic_node(state: TalentAngelState):
     print("🧐 Critic: Validating response...")

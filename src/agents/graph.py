@@ -60,7 +60,7 @@ workflow.add_conditional_edges(
 )
 
 # Both Pathfinder and Researcher feed into the Consultor
-workflow.add_edge("pathfinder", "market_researcher")
+workflow.add_edge("pathfinder", "consultor")
 workflow.add_edge("market_researcher", "consultor")
 
 # Consultor draft always goes to the Critic for a QA check
