@@ -5,3 +5,7 @@ langchain-google-genai
 python-dotenv
 langchain-core
 tqdm
+
+pydantic
+tavily-python
+PyMuPDF
