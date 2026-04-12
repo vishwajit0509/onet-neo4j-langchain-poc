@@ -9,3 +9,4 @@ tqdm
 pydantic
 tavily-python
 PyMuPDF
+google-api-python-client
