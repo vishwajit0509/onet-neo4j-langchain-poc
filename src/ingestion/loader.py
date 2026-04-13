@@ -72,3 +72,5 @@ def ingest_tasks(file_path):
     ]
     db.run_query(query, {"rows": rows})
     print(f"✅ {len(rows)} Tasks linked!")
+
+    

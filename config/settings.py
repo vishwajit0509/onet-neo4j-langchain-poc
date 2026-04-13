@@ -3,32 +3,25 @@ import yaml  # ✅ FIX 1: Add this
 from pathlib import Path
 from dotenv import load_dotenv
 
-# 1. Setup Base Directory (POC-LFDT root)
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # 2. Load environment variables
 load_dotenv(BASE_DIR / ".env")
 
-# -------------------------
-# 📄 LOAD PROMPTS YAML
-# -------------------------
-PROMPTS_PATH = BASE_DIR / "config" / "prompts.yaml"  # ✅ FIX 2
+
+PROMPTS_PATH = BASE_DIR / "config" / "prompts.yaml" 
 
 with open(PROMPTS_PATH, "r", encoding="utf-8") as f:
     PROMPTS = yaml.safe_load(f)
 
-# -------------------------
-# 🔐 CREDENTIALS
-# -------------------------
 NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USERNAME = os.getenv("NEO4J_USERNAME")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-# -------------------------
-# 🤖 MODEL CONFIG
-# -------------------------
+
 GEMINI_MODEL_NAME = "gemini-2.5-flash"
 TEMPERATURE = 0.1
 

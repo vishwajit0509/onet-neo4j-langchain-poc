@@ -146,3 +146,5 @@ critic:
     Output:
     SCORE: [1-10]
     FEEDBACK: [If < 9 → one sentence correction, else APPROVED]
+
+    

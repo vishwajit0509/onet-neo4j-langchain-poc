@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.
 from neo4j import GraphDatabase
 from langchain_neo4j import Neo4jGraph
 from langchain_community.vectorstores import Neo4jVector
-from src.utils.llms import embeddings # Import from your utils
+from src.utils.llms import embeddings 
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -19,7 +19,7 @@ URI = os.getenv("NEO4J_URI")
 USER = os.getenv("NEO4J_USERNAME")
 PWD = os.getenv("NEO4J_PASSWORD")
 
-# 1. Raw Driver (For Ingestion)
+
 class Neo4jManager:
     def __init__(self):
         self.driver = GraphDatabase.driver(URI, auth=(USER, PWD))
@@ -32,7 +32,7 @@ class Neo4jManager:
 
 db = Neo4jManager()
 
-# 2. LangChain Wrappers (For Retrieval)
+
 graph_db = Neo4jGraph(url=URI, username=USER, password=PWD)
 
 vector_store = Neo4jVector.from_existing_index(
