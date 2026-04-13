@@ -7,8 +7,11 @@ from src.utils.llms import llm
 from src.utils.helpers import (
     PROMPTS_V2, 
     safe_json_loads, 
-    clean_role
+    clean_role,
+
 )
+
+from src.tools.formatting import format_link_section,format_gaps
 
 from src.agent2.state import TalentAngelState
 
@@ -365,3 +368,129 @@ def project_architect_node(state: TalentAngelState):
         }
     }
 
+def data_aggregator_node(state: TalentAngelState):
+    """Simple synchronizing point for the parallel worker outputs"""
+    print("🔄 Aggregator: Collecting worker outputs...")
+    return {"next_action":"consultor"}
+
+def consultor_node(state: TalentAngelState):
+    print("👼 Consultor: Building dynamic answer")
+    current_role = state.get("current_role") or (state.get("locator_data") or {}).get("title") or "your current role"
+    target_role = state.get("target_role")
+    intent = state.get("intent") or "transition"
+
+    gap_data = state.get("graph_gap_data")
+    market = state.get("market_research_data") or {}
+    social = state.get("social_data") or {}
+    media = state.get("media_data") or {}
+    academic = state.get("academic_data") or {}
+    projects = state.get("project_data") or {}
+
+    sections = []
+    # ... (Your section logic remains the same) ...
+    if intent == "transition" and target_role:
+        sections.append("- Executive summary")
+        if gap_data: sections.append("- Skill gaps")
+    else:
+        sections.append("- Role Overview")
+    
+    if market.get("summary") or market.get("links") : sections.append("- Market and salary Insights")
+    if social.get("links"): sections.append("- Networking & community")
+    if media.get("videos"): sections.append("- Day-in-the-Life Videos")
+    if academic.get("courses"): sections.append("- Recommended Courses")
+    if projects.get("projects"): sections.append("- Portfolio Projects")
+    if intent == "transition" and gap_data: sections.append("- 30/60/90 day plan")
+
+    sections_str = "\n".join(sections)
+
+    # These are safe because the functions ALWAYS return a string
+    gap_text = format_gaps((gap_data or {}).get("gaps", []))
+    market_links = format_link_section("Market Links", market.get("links", []), "")
+    social_links = format_link_section("Networking Links", social.get("links", []), "")
+    video_links = format_link_section("Video Links", media.get("videos", []), "")
+    course_links = format_link_section("Course Links", academic.get("courses", []), "")
+
+    # --- THE FIX STARTS HERE ---
+    project_blocks = []
+    project_text = "" # 1. Initialize it as empty FIRST
+
+    for p in projects.get("projects", []):
+        stack = ", ".join(p.get("stack", []))
+        project_blocks.append(f"- **{p.get('title')}**: Stack: {stack}")
+    
+    # 2. Assign it OUTSIDE the loop
+    if project_blocks:
+        project_text = "### Portfolio Projects\n" + "\n".join(project_blocks)
+    # --- THE FIX ENDS HERE ---
+
+    raw_instruction = PROMPTS_V2.get("consultor_prompt_instruction", "")
+
+    prompt = raw_instruction.format(
+        current_role=current_role,
+        target_role=target_role,
+        sections_str=sections_str
+    )
+
+    context = f"""
+--- DATA FOR YOU TO USE ---
+Skill gaps: {gap_text if gap_data else "Not requested/available."}
+
+Market summary: {market.get("summary", "")}
+{market_links}
+
+Networking Tips: {chr(10).join('- ' + t for t in social.get("tips", [])) if social.get("tips") else ""}
+{social_links}
+
+{video_links}
+
+{course_links}
+
+{project_text}
+"""
+    
+    retry = state.get("retry_count") or 0
+    if state.get("critic_feedback"):
+        prompt += f"\n\nReviewer Feedback to Fix: {state['critic_feedback']}"
+
+    final = llm.invoke(prompt + "\n\n" + context).content
+    return {
+        "final_response": final,
+        "next_action": "critic",
+        "retry_count": retry
+    }
+
+
+def critic_node(state: TalentAngelState):
+    print("🧐 Critic: Enforcing Integrity and Quality...")
+
+    draft = state.get("final_response") or ""
+    
+    
+    retry = state.get("retry_count") or 0 
+
+    if retry >= 2:
+        print("   ✅ Max retries reached → forcing exit")
+        return {"next_action": "end", "critic_feedback": None, "retry_count": retry}
+    
+    raw_critic_prompt =  PROMPTS_V2.get("critic_prompt","")
+    prompt = raw_critic_prompt.format(draft=draft)
+
+    try:
+        raw_response = llm.invoke(prompt).content.strip()
+        data = safe_json_loads(raw_response,{})
+        score = int(data.get("score",8))
+        feedback = data.get("feedback","looks good")
+    except Exception as e:
+        print(f"   ⚠️ Critic parsing failed: {e}")
+        return {"next_action": "end", "retry_count": retry}
+    
+    print(f"   → Quality Score: {score}/10 | Retry Count: {retry}")
+
+    if score < 7:
+        return {
+            "critic_feedback": feedback, 
+            "next_action": "consultor", 
+            "retry_count": retry + 1
+        }
+    
+    return {"next_action": "end", "critic_feedback": None, "retry_count": retry}
