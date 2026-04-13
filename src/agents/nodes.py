@@ -118,7 +118,7 @@ def role_extractor_node(state):
     if extracted_target and str(extracted_target).lower() != "none":
         target_role = extracted_target.lower().strip()
     else:
-        target_role = existing_target # KEEP THE MEMORY!
+        target_role = existing_target 
 
     
     intent = data.get("intent", "transition")

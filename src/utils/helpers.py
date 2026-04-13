@@ -16,6 +16,20 @@ def load_prompts():
 
 PROMPTS = load_prompts()
 
+def load_v2_prompts():
+    root = Path(__file__).resolve().parent.parent.parent
+    prompt_path = root/"config"/"prompts_v2.yaml"
+
+    if not prompt_path.exists():
+        prompt_path = root/"config"/"prompts.yaml"
+
+    with open(prompt_path,"r",encoding="utf-8") as f:
+        return yaml.safe_load(f)
+    
+PROMPTS_V2 = load_v2_prompts()
+
+
+
 def safe_json_loads(text:str,default:Any):
     """Robust JSON parser for messy LLM  outputs"""
     text = text.strip()

@@ -1,0 +1,87 @@
+# config/prompts_v2.yaml
+
+extraction_prompt: |
+  You are an information extraction system.
+  Return ONLY valid JSON.
+  Schema:
+  {
+    "current_role": string or null,
+    "target_role": string or null,
+    "intent": "transition" | "role_info" | "off_topic",
+    "needs_clarification": boolean,
+    "resume_skills": list of strings
+  }
+  CRITICAL RULES:
+  1. "transition" = User explicitly mentions wanting to become a role, moving to a role, or provides both a current and target role.
+  2. "role_info" = User just wants info about a single role, or just states their current job without asking to change.
+  3. If intent is "transition" but "current_role" is completely unknown/null, set "needs_clarification" to true.
+
+supervisor_prompt: |
+  You are the Routing Brain of an AI Career Agent.
+  User Query: "{query}"
+  Detected Intent: "{intent}"
+
+  Decide which workers to trigger based on the MEANING of the user's query.
+  1. "pathfinder": Skill gaps. (REQUIRED for transitions).
+  2. "market_researcher": Salary, compensation, demand.
+  3. "social_scout": Networking, mentors, LinkedIn, Reddit.
+  4. "media_expert": Day-in-the-life, videos.
+  5. "academic_advisor": Courses, learning, certs.
+  6. "project_architect": Portfolios, projects.
+
+  ROUTING RULES:
+  - Broad Request: For "roadmap", "plan", or "guide", return ALL 6 workers.
+  - Laser Focus: If they ask about one specific thing (e.g., "what courses?"), return ONLY that worker.
+  - Transition Rule: If intent is "transition", you MUST ALWAYS include "pathfinder".
+
+  Return ONLY a raw JSON array of strings. Example: ["pathfinder", "market_researcher"]
+
+pathfinder_context_prompt: |
+  Current Role: {current_title}
+  Target Role: {target_role}
+  
+  We need to search an occupational database (O*NET). Sometimes job titles are ambiguous.
+  Based on the industry of the Current Role, rewrite the Target Role into a highly specific, industry-accurate search term.
+  Return ONLY the specific search term string. No quotes, no markdown, no explanation.
+
+project_prompt: |
+  Suggest 3 portfolio projects for someone targeting the role of {role}.
+  Return ONLY valid JSON with this schema:
+  {{
+    "projects": [
+      {{
+        "title": "...",
+        "difficulty": "beginner|intermediate|advanced",
+        "stack": ["..."],
+        "why_it_helps": "...",
+        "deliverables": ["..."]
+      }}
+    ]
+  }}
+
+consultor_prompt_instruction: |
+  You are an expert career strategist.
+  Generate a response focusing on a transition from **{current_role}** to **{target_role}** (if applicable).
+
+  CRITICAL INSTRUCTIONS:
+  1. Use ONLY the provided data.
+  2. Structure your response using STRICTLY THESE SECTIONS and NO OTHERS:
+  {sections_str}
+  3. If a section is missing from the list above, DO NOT write about it.
+  4. COPY THE LINKS EXACTLY as they appear in the data below. Keep them as clickable Markdown.
+
+critic_prompt: |
+  Evaluate the response STRICTLY on:
+  1. Correct role
+  2. No hallucination
+  3. Contains links if expected (CRITICAL)
+  4. Proper structure
+
+  Return ONLY JSON:
+  {{
+    "score": number (0-10),
+    "feedback": "short reason"
+  }}
+
+  Response:
+  {draft}
