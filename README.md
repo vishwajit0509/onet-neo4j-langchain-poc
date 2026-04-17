@@ -372,6 +372,15 @@ You will be prompted to enter your current role, your target career, and optiona
 6. Synthesise everything into a personalised, structured career roadmap
 7. Self-review and refine the output via the Critic before returning it to you
 
+## 🚀 The 6-Phase Production Roadmap
+We have successfully completed the **Core Logic (Phase 0)**. Here is our path to a full-scale SaaS:
+
+* **Phase 1: The Bridge (FastAPI):** Exposing the engine as a streaming REST API.
+* **Phase 2: Long-Term Memory (PostgreSQL):** Moving to DB persistence for multi-session support and for personalisation.
+* **Phase 3: Speed Reflex (Redis Cache):** Implementing **Semantic Vector Caching** for instant repeat queries.
+* **Phase 4: Safety Valve (HITL):** Adding `interrupt_before` logic for human role-confirmation.
+* **Phase 5: The Face (Next.js/React):** Building a futuristic, dark-mode dashboard.
+
 
 ## 🛡️ API Usage & Rate Limit Notes
 
