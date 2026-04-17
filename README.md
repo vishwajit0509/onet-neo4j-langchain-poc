@@ -277,7 +277,7 @@ Before getting started, have the following ready:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/careerforge-ai.git
+git clone https://github.com/vishwajit0509/onet-neo4j-langchain-poc.git
 cd careerforge-ai
 ```
 
@@ -372,7 +372,6 @@ You will be prompted to enter your current role, your target career, and optiona
 6. Synthesise everything into a personalised, structured career roadmap
 7. Self-review and refine the output via the Critic before returning it to you
 
----
 
 ## 🛡️ API Usage & Rate Limit Notes
 
