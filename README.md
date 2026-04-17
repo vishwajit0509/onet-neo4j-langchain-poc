@@ -211,3 +211,5 @@ The following mitigations are already built into the project:
 ## 📄 License
 
 This project is open-source. See `LICENSE` for full details.
+
+![somethig](graph-lfdt.png)
