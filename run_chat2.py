@@ -43,7 +43,7 @@ def test_modular_agent():
         for event in carrer_forge_app.stream(initial_state, config=config):
             for node_name, state_update in event.items():
                 print(f"✅ Node Finished: [{node_name}]")
-                
+            
                 
                 if "next_action" in state_update:
                     print(f"   ↳ Transitioning to: {state_update['next_action']}")
