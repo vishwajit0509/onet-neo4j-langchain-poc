@@ -211,8 +211,6 @@ __marimo__/
 venv/
 __pycache__/
 *.pyc
-data/raw/
+
 .ipynb_checkpoints/
 
-data/raw/
-data/processed/
